@@ -1,167 +1,122 @@
-# FarmOS Projekt - Lokale Installation
+# AGRIMO
 
-Dieses Repository enthält eine lokale FarmOS-Installation. Dieses README erklärt, wie man das Projekt lokal einrichtet und startet.
+AGRIMO ist eine Webapplikation zur Verwaltung von landwirtschaftlichen Assets und Daten. Dieses Dokument beschreibt, wie du das Projekt lokal aufsetzen und betreiben kannst.
 
 ---
 
 ## Voraussetzungen
 
-Stelle sicher, dass folgende Software installiert ist:
+Stelle sicher, dass die folgenden Tools auf deinem System installiert sind:
 
-- [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - Git
-- PHP (optional, falls du lokal Tests außerhalb von Docker machen willst)
-- Composer (optional, falls du PHP-Abhängigkeiten manuell installieren willst)
+- Optional: PHP CLI, falls du lokal PHP-Skripte ausführen möchtest
+
+---
+
+## Repository klonen
+
+```bash
+git clone git@github.com:whispers2011/AGRIMO.git
+cd AGRIMO
+```
 
 ---
 
 ## Projektstruktur
 
 ```
-farmos/
-├─ config/                # Konfigurationen (Datenbank, Services, etc.)
-├─ db-init/               # Datenbank-Initialisierungsskripte
-├─ docker-compose.yml     # Docker-Setup
-├─ php.ini                # PHP-Konfiguration
-├─ private/               # Private Dateien (nicht versioniert)
-├─ restore.sh             # Backup Restore Script
-├─ setup-cron.sh          # Cronjob Setup Script
-├─ sites/                 # Drupal Sites
-│  ├─ default/            # Standard FarmOS Site
-│  └─ example.*           # Beispiel-Dateien (ignoriert durch Git)
-├─ status.sh              # Health-Check / Status Script
-└─ DEPLOYMENT.md          # Deployment Hinweise
+AGRIMO/
+├─ DEPLOYMENT.md
+├─ docker-compose.yml
+├─ php.ini
+├─ setup-cron.sh
+├─ status.sh
+├─ sites/
+│  ├─ default/
+│  │  ├─ default.services.yml
+│  │  ├─ default.settings.php
+│  │  └─ files/
+│  └─ README.txt
+├─ config/
+├─ private/          # lokal, nicht versioniert
+├─ backup.sh          # lokal, nicht versioniert
+├─ restore.sh         # lokal, nicht versioniert
+└─ db-init/           # lokal, nicht versioniert
 ```
+
+- `sites/default` enthält die Standard-Site für die AGRIMO-Anwendung.
+- `config/` beinhaltet globale Konfigurationen.
+- `private/`, `backup.sh`, `restore.sh` und `db-init/` werden **nicht** versioniert und müssen lokal gepflegt werden.
 
 ---
 
-## 1. Repository klonen
+## Lokales Setup mit Docker
 
-```bash
-git clone git@github.com:whispers2011/AGRIMO.git farmos
-cd farmos
-```
-
----
-
-## 2. Umgebungsvariablen einrichten
-
-Erstelle eine `.env` Datei (wird von Docker ignoriert, siehe `.gitignore`):
-
-```bash
-cp .env.example .env
-```
-
-Passe ggf. Datenbank-Host, Benutzer, Passwort und Ports an.
-
----
-
-## 3. Docker Container starten
+1. Starte die Container:
 
 ```bash
 docker-compose up -d
 ```
 
-Dies startet:
+2. Prüfe die laufenden Container:
 
-- Webserver (PHP + Apache/Nginx)
-- Datenbank (z.B. MySQL)
-- Alle weiteren Services, die im `docker-compose.yml` definiert sind
+```bash
+docker ps
+```
+
+3. Zugriff auf die AGRIMO-Site:
+
+- Öffne deinen Browser unter `http://localhost` (Standardport: 80)
+- Die Standard-Site befindet sich in `sites/default`
 
 ---
 
-## 4. Datenbank initialisieren
+## Cronjobs einrichten
 
-Wenn du die Datenbank zum ersten Mal aufsetzen willst:
+Falls nötig, können Cronjobs wie in `setup-cron.sh` beschrieben eingerichtet werden:
 
 ```bash
-./db-init/init-db.sh
+bash setup-cron.sh
 ```
 
-oder den entsprechenden Befehl für deine `db-init` Scripts.
+Dies richtet geplante Aufgaben für Backups, Status-Skripte oder Datenimporte ein.
 
 ---
 
-## 5. FarmOS installieren / konfigurieren
+## Datenbank
 
-- Kopiere die Beispiel-Site-Konfiguration:
-
-```bash
-cp sites/example.settings.local.php sites/default/settings.php
-```
-
-- Stelle sicher, dass die `sites/default/files` Ordner **schreibbar** sind:
-
-```bash
-chmod -R 775 sites/default/files
-```
-
-- Rufe die Seite im Browser auf:  
-```
-http://localhost:8080
-```
-
-> Port kann je nach `docker-compose.yml` variieren.
+- Die Datenbank wird über Docker Compose bereitgestellt.
+- Initialisierungsskripte befinden sich in `db-init/` (nicht versioniert).
+- Datenbank-Zugang: siehe `docker-compose.yml`
 
 ---
 
-## 6. Cronjobs einrichten (optional)
+## Git & Versionierung
+
+- Lokale Änderungen werden mit Git verwaltet:
 
 ```bash
-./setup-cron.sh
-```
-
-Dies richtet die FarmOS-typischen Cronjobs ein (z.B. für Sensor-Updates, Logs, Backups).
-
----
-
-## 7. Backup & Restore
-
-- Backup erstellen:
-
-```bash
-./backup.sh
-```
-
-- Backup wiederherstellen:
-
-```bash
-./restore.sh <backup-datei>.tar.gz
-```
-
----
-
-## 8. Git Workflow
-
-- Änderungen committen:
-
-```bash
+git status
 git add .
-git commit -m "Beschreibung der Änderung"
+git commit -m "Beschreibung der Änderungen"
 git push origin main
 ```
 
-> Private Dateien (z.B. `private/`, `.env`) werden nicht ins Git gepusht.
+- Dateien in `.gitignore` werden **nicht** versioniert (Backups, private Konfigurationen, Cache-Dateien, lokale Claude-Versionen etc.).
 
 ---
 
-## 9. Tipps
+## Tipps für Entwickler:innen
 
-- **Composer** verwenden, um zusätzliche PHP-Module zu installieren
-- **Docker Logs** checken:
-
-```bash
-docker-compose logs -f
-```
-
-- **Datenbank-Zugriff lokal**:
-
-```bash
-docker exec -it <db-container-name> mysql -u root -p
-```
+- Änderungen an `sites/default/settings.php` oder `config/` können lokal getestet werden.
+- Große Dateien oder temporäre Daten nicht ins Repo aufnehmen.
+- Für die Produktion müssen `private/`-Daten manuell auf den Server übertragen werden.
 
 ---
 
-## Lizenz
+## Kontakt
 
-Dieses Projekt ist **privat** / auf Anfrage.
+Für Fragen und Support siehe `DEPLOYMENT.md` oder kontaktiere das AGRIMO-Team.
+
