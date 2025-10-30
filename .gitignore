@@ -1,0 +1,24 @@
+# Cache / temporäre Dateien
+*.log
+*.pyc
+__pycache__/
+.local/
+cache/
+tmp/
+*.sqlite3
+
+# Claude / lokale große Dateien
+.local/share/claude/versions/
+
+# Backup / private config
+backup.sh
+restore.sh
+private/
+db-init/
+
+# Docker-Volumes und lokale Einstellungen
+docker-compose.override.yml
+*.env
+
+# Sites Beispiele, die nicht produktiv sind
+sites/example.*
